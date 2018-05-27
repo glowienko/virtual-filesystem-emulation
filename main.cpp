@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cstring>
-#include "FileSystem.h"
+#include "filesystem/FileSystem.h"
 
 
 #define DATA_BLOCK_SIZE 2048 //ilosc danych w jednym bloku pamieci
@@ -19,22 +19,22 @@ enum menuOption {
 
 void printMenu();
 
-void clearString(const char *filename);
+void clearString(const char *charArray);
 using namespace std;
 
 int main() {
     FileSystem fileSystem;
 
-    int userActionType;
+    int menuAction;
     bool continueWorking = true;
 
     while (continueWorking) {
-        printMenu();
         char filename[64];
         char discName[64];
 
-        cin >> userActionType;
-        switch (userActionType) {
+        printMenu();
+        cin >> menuAction;
+        switch (menuAction) {
             case menuOption(CREATE_DISC):
                 cout << "Enter virtual disc name:" << endl;
                 cin >> discName;
@@ -81,7 +81,6 @@ int main() {
         }
     }
 
-    delete fileSystem;
     return 0;
 }
 
@@ -90,7 +89,7 @@ void clearString(const char *charArray) {
 }
 
 void printMenu() {
-    cout << endl << "FILESYSTEM - choose menuOption:" << endl;
+    cout << endl << "FILESYSTEM::" << endl;
     cout << "1. Create virtual disc" << endl;
     cout << "2. Delete virtual disc" << endl;
     cout << "3. Copy file to virtual disc" << endl;

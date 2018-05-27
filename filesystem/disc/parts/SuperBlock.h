@@ -9,20 +9,21 @@
 class SuperBlock {
 
 public:
-    SuperBlock(char *discName, unsigned long discSize, unsigned long blocksCount, unsigned long discFreeSpace);
+//    SuperBlock(char *discName, unsigned long discSize, unsigned long blocksCount, unsigned long discFreeSpace);
+    SuperBlock();
     virtual ~SuperBlock();
 
 private:
     char discName[];
+    unsigned long discSize;
+    unsigned long blocksCount;
+    unsigned long discFreeSpace;
+
 public:
     const char *getDiscName() const;
     unsigned long getDiscSize() const;
     unsigned long getBlocksCount() const;
     unsigned long getDiscFreeSpace() const;
-private:
-    unsigned long discSize;
-    unsigned long blocksCount;
-    unsigned long discFreeSpace;
 };
 
 

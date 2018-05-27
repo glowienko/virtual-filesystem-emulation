@@ -2,14 +2,13 @@
 #define KOD_FILESYSTEM_H
 
 
-#include "File.h"
-#include "VirtualDisc.h"
+#include "../file/File.h"
+#include "disc/VirtualDisc.h"
 
 class FileSystem {
 
 private:
     VirtualDisc virtualDisc;
-
 
 public:
     FileSystem();

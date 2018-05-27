@@ -5,7 +5,9 @@
 
 using namespace std;
 
-FileSystem::FileSystem() = default;
+FileSystem::FileSystem() {
+    VirtualDisc virtualDisc;
+}
 
 FileSystem::~FileSystem() = default;
 
@@ -30,7 +32,7 @@ void FileSystem::saveFileOnDisc(char *name) {
 }
 
 void FileSystem::createDisc(char *discName, long blocksNumber, long blockSize) {
-    cout<<"Virtual disc created, name:"<<discName;
+    cout << "Virtual disc created, name:" << discName;
 }
 
 void FileSystem::copyFileToSystemDisc(char *name) {

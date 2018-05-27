@@ -1,7 +1,6 @@
 #include "SuperBlock.h"
 
-SuperBlock::SuperBlock(char *discName, unsigned long discSize, unsigned long blocksCount, unsigned long discFreeSpace)
-        : discName(discName), discSize(discSize), blocksCount(blocksCount), discFreeSpace(discFreeSpace) {}
+SuperBlock::SuperBlock() = default;
 
 const char *SuperBlock::getDiscName() const {
     return discName;

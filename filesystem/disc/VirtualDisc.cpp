@@ -1,5 +1,8 @@
 #include "VirtualDisc.h"
 
-VirtualDisc::VirtualDisc() = default;
+
+VirtualDisc::VirtualDisc() {
+    isCreated = false;
+};
 
 VirtualDisc::~VirtualDisc() = default;
