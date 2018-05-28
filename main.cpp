@@ -1,30 +1,35 @@
 #include <iostream>
 #include <cstring>
-#include "filesystem/FileSystem.h"
+#include <sys/stat.h>
+#include "FileSystemStructs.h"
 
-
-#define DATA_BLOCK_SIZE 2048 //ilosc danych w jednym bloku pamieci
-#define BLOCK_COUNT 8192 //ilosc blokow pamieci
-
-enum menuOption {
-    CREATE_DISC = 1,
-    DELETE_DISC = 2,
-    SAVE_FILE_TO_DISC = 3,
-    COPY_FILE_TO_SYSTEM = 4,
-    DELETE_FILE = 5,
-    SHOW_DIR = 6,
-    SHOW_DISC_STATS = 7,
-    EXIT = 8
-};
-
-void printMenu();
-
-void clearString(const char *charArray);
 using namespace std;
 
-int main() {
-    FileSystem fileSystem;
+void createDisc(char *discName);
+void deleteDisc();
+void saveFileOnDisc(char *name);
+void copyFileToSystemDisc(char *name);
+void deleteFile(char *name);
+void showDirectory();
+void showDiscStatistics();
 
+void printMenu();
+void clearString(const char *charArray);
+int disc_exist();
+int isEmpty(FILE *file);
+void saveStructureToDisc();
+void initDiscStructure(const char *discName);
+void loadStructureFromDisc();
+
+FILE *disc = nullptr;
+SuperBlock superBlock; //general info about disc and data blocks in the whole disc
+
+short blocksOccupationTable[BLOCK_COUNT];      // 1 - block is taken, 0- block is free
+FileDescriptor fileDescriptors[BLOCK_COUNT];   // info about file in every block
+Block dataBlocksTable[BLOCK_COUNT];        // all blocks in disc
+//short dataBlocksOccupationTable[BLOCK_COUNT];  // 1 - block has data, 0 - no data
+
+int main() {
     int menuAction;
     bool continueWorking = true;
 
@@ -32,61 +37,169 @@ int main() {
         char filename[64];
         char discName[64];
 
+        loadStructureFromDisc();
+
         printMenu();
         cin >> menuAction;
         switch (menuAction) {
             case menuOption(CREATE_DISC):
                 cout << "Enter virtual disc name:" << endl;
                 cin >> discName;
-
-                fileSystem.createDisc(discName, BLOCK_COUNT, DATA_BLOCK_SIZE);
+                createDisc(discName);
                 clearString(discName);
                 break;
             case menuOption(DELETE_DISC):
-                fileSystem.deleteDisc();
+                deleteDisc();
                 break;
             case menuOption(SAVE_FILE_TO_DISC):
-                cout << "Enter filename:"<<endl;
+                cout << "Enter filename:" << endl;
                 cin >> filename;
 
-                fileSystem.saveFileOnDisc(filename);
+                saveFileOnDisc(filename);
                 clearString(filename);
                 break;
             case menuOption(COPY_FILE_TO_SYSTEM):
-                cout << "Enter the file name:"<<endl;
+                cout << "Enter the file name:" << endl;
                 cin >> filename;
 
-                fileSystem.copyFileToSystemDisc(filename);
+                copyFileToSystemDisc(filename);
                 clearString(filename);
                 break;
             case menuOption(DELETE_FILE):
                 cout << "Enter filename you wish to delete:" << endl;
                 cin >> filename;
 
-                fileSystem.deleteFile(filename);
+                deleteFile(filename);
                 clearString(filename);
                 break;
             case menuOption(SHOW_DIR):
-                fileSystem.showDirectory();
+                showDirectory();
                 break;
             case menuOption(SHOW_DISC_STATS):
-                fileSystem.showDiscStatistics();
+                showDiscStatistics();
                 break;
             case menuOption(EXIT):
                 cout << "Bye, bye!" << endl;
                 continueWorking = false;
                 break;
             default:
-                cout << "Enter a valid option!\n";
+                cout << "Enter a valid option!" << endl;
         }
     }
 
     return 0;
 }
 
+
+void createDisc(char *discName) {
+    if (disc_exist()) {
+        cout << "Virtual disc already exists!" << endl;
+        return;
+    }
+
+    initDiscStructure(discName);
+    saveStructureToDisc();
+}
+
+
+void deleteDisc() {
+    if (!disc_exist()) {
+        cout << "there is no disc yet" << endl;
+        return;
+    }
+
+    remove(DISC_NAME);
+    2
+    cout << "Disc deleted" << endl;
+}
+
+void saveFileOnDisc(char *name) {
+
+}
+
+void copyFileToSystemDisc(char *name) {
+
+}
+
+void deleteFile(char *name) {
+
+}
+
+void showDirectory() {
+    cout << "Disc directory:" << endl << endl;
+    cout << superBlock.discName << "/root" << endl;
+
+    for (int i = 0; i < BLOCK_COUNT; i++) {
+        if (blocksOccupationTable[i] == 1) {
+            cout << fileDescriptors[i].fileName << "  " << fileDescriptors[i].fileSize << " Bytes" << endl;
+        }
+    }
+}
+
+void showDiscStatistics() {
+
+}
+
+// ======================= for load / save program structures from / to disc
+
+void initDiscStructure(const char *discName) {
+    strcpy(superBlock.discName, discName);
+    superBlock.blocksCount = BLOCK_COUNT;
+    superBlock.discDataSize = BLOCK_COUNT * BLOCK_SIZE;
+    superBlock.discTotalSize = sizeof(SuperBlock) + sizeof(short) * BLOCK_COUNT +
+                               sizeof(FileDescriptor) * BLOCK_COUNT + sizeof(Block) * BLOCK_COUNT;
+
+    for (short &i : blocksOccupationTable) {
+        i = 0;
+    }
+}
+
+void loadStructureFromDisc() {
+    if (disc_exist()) {
+        disc = fopen(DISC_NAME, "r");
+        fread(&superBlock, sizeof(SuperBlock), 1, disc);
+        fread(&blocksOccupationTable, sizeof(short), BLOCK_COUNT, disc);
+        fread(&fileDescriptors, sizeof(FileDescriptor), BLOCK_COUNT, disc);
+        fread(&dataBlocksTable, sizeof(Block), BLOCK_COUNT, disc);
+        fclose(disc);
+    }
+}
+
+void saveStructureToDisc() {
+    disc = fopen(DISC_NAME, "w+");
+    fwrite(&superBlock, sizeof(SuperBlock), 1, disc);
+    fwrite(&blocksOccupationTable, sizeof(short), BLOCK_COUNT, disc);
+    fwrite(&fileDescriptors, sizeof(FileDescriptor), BLOCK_COUNT, disc);
+    fwrite(&dataBlocksTable, sizeof(Block), BLOCK_COUNT, disc);
+    fclose(disc);
+}
+
+
+
+
+// ============ UTILS =====================
+
 void clearString(const char *charArray) {
     memset((void *) charArray, 0, sizeof charArray);
 }
+
+int disc_exist() {
+    struct stat buffer{};
+    return (stat(DISC_NAME, &buffer) == 0);
+}
+
+int isEmpty(FILE *file) {
+    long savedOffset = ftell(file);
+    fseek(file, 0, SEEK_END);
+
+    if (ftell(file) == 0) {
+        return 1;
+    }
+
+    fseek(file, savedOffset, SEEK_SET);
+    return 0;
+}
+
 
 void printMenu() {
     cout << endl << "FILESYSTEM::" << endl;
@@ -99,51 +212,3 @@ void printMenu() {
     cout << "7. Show disc statistics" << endl;
     cout << "8. Exit" << endl << endl;
 }
-
-
-/*
- * //                cin.clear();
-//                fflush(stdin);
-//                f1.create_file(name, content);
- *
-    cout << "Enter file name\n";
-                cin >> name;
-                c = f1.show_file_content(name);
-                if (c != NULL)
-                    cout << c;
-                break;
-            case 3:
-                cout << "Enter file name\n";
-                cin >> name;
-                c = f1.search_file(name);
-                if (c != NULL)
-                    cout << c;
-                break;
-            case 4:
-                cout << "Enter the file name\n";
-                cin >> name;
-                cout << "Enter the keyword to be searched\n";
-                cin >> keyword;
-                f1.search_keyword(name, keyword);
-                break;
-            case 5:
-                cout << "Enter the name of new file\n";
-                cin >> name;
-                cout << "Enter the content of the file\n";
-                cin.clear();
-                fflush(stdin);
-                cin.getline(content, sizeof(content));
-                f1.create_file(name, content);
-                break;
-            case 6:
-                cout << "Enter the name of the file to be deleted\n";
-                cin >> name;
-                f1.delete_file(name);
-                break;
-            case 7:
-                cout << "Exiting, bye!"<<endl;
-                continueWorking = false;
-                break;
-            default:
-                cout << "Enter a valid option!\n";
- * */
